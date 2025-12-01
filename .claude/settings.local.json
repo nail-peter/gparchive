@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(npm install:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(winget install:*)",
+      "Bash(where:*)",
+      "Bash(\"C:\\Users\\schmi\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.0-full_build\\bin\\ffmpeg.exe\" -i \"./archive/Gilles Peterson, D''Angelo Tribute.mp4\" -vn -acodec libmp3lame -b:a 320k \"./archive/Gilles Peterson, D''Angelo Tribute.mp3\")",
+      "Bash(\"C:\\Users\\schmi\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.0-full_build\\bin\\ffmpeg.exe\" -i \"./archive/Gilles Peterson, D''''Angelo Tribute.mp4\")",
+      "Bash(\"C:\\Users\\schmi\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.0-full_build\\bin\\ffmpeg.exe\" -i \"./archive/Gilles Peterson, D''Angelo Tribute.mp3\")",
+      "Bash(\"C:\\Users\\schmi\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.0-full_build\\bin\\ffmpeg.exe\" -i \"./archive/Gilles Peterson, D''Angelo Tribute.mp3\" -ar 44100 -acodec libmp3lame -b:a 320k \"./archive/Gilles Peterson, D''Angelo Tribute_resampled.mp3\")",
+      "Bash(\"C:\\Users\\schmi\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.0-full_build\\bin\\ffmpeg.exe\" -i \"./archive/Gilles Peterson, D''Angelo Tribute_resampled.mp3\")",
+      "Bash(cat:*)",
+      "Bash(yt-dlp:*)",
+      "Bash(npm prune:*)",
+      "Bash(npm start)",
+      "Bash(taskkill:*)",
+      "Read(//c/Users/schmi/Downloads/**)",
+      "Bash(mkdir:*)",
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
