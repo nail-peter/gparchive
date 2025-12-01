@@ -21,35 +21,10 @@ let castingState = {
   position: 0
 };
 
-// Basic authentication middleware
-const auth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Audio Player"');
-    return res.status(401).send('Authentication required');
-  }
-
-  const base64Credentials = authHeader.split(' ')[1];
-  const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
-  const [username, password] = credentials.split(':');
-
-  const validUsername = process.env.PLAYER_USERNAME || 'admin';
-  const validPassword = process.env.PLAYER_PASSWORD || 'changeme';
-
-  if (username === validUsername && password === validPassword) {
-    next();
-  } else {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Audio Player"');
-    res.status(401).send('Invalid credentials');
-  }
-};
-
-// Parse JSON before applying auth
+// Parse JSON
 app.use(express.json());
 
-// Serve audio files WITHOUT authentication (for DLNA/UPnP devices)
-// MUST be before auth middleware
+// Serve audio files (no authentication required)
 app.get('/audio/:filename', async (req, res) => {
   try {
     const filename = decodeURIComponent(req.params.filename);
@@ -134,9 +109,6 @@ app.get('/audio/:filename', async (req, res) => {
     res.status(500).send('Error serving audio file');
   }
 });
-
-// Apply auth to all OTHER routes
-app.use(auth);
 
 // Serve static files (HTML, CSS, JS, manifest, icons)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -379,7 +351,6 @@ app.get('/api/cast/status', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Audio player server running at http://localhost:${PORT}`);
-  console.log(`Username: ${process.env.PLAYER_USERNAME || 'admin'}`);
-  console.log(`Password: ${process.env.PLAYER_PASSWORD || 'changeme'}`);
-  console.log('\nIMPORTANT: Change default credentials in .env file!');
+  console.log(`Archive directory: ${ARCHIVE_DIR}`);
+  console.log(`R2 storage: ${r2Client.isEnabled() ? 'Enabled' : 'Disabled'}`);
 });
