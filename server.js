@@ -11,6 +11,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ARCHIVE_DIR = process.env.ARCHIVE_DIR || './archive';
 
+// Ensure archive directory exists (for local fallback)
+fs.ensureDirSync(ARCHIVE_DIR);
+
 // Casting state
 let discoveredDevices = [];
 let activeRenderer = null;
