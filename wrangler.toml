@@ -1,8 +1,0 @@
-name = "gparchive-api"
-main = "worker.js"
-compatibility_date = "2024-01-01"
-
-# R2 Bucket Binding
-[[r2_buckets]]
-binding = "GPARCHIVE_BUCKET"
-bucket_name = "gparchive"
