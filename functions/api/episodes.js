@@ -16,7 +16,8 @@ export async function onRequest(context) {
         url: `/audio/${encodeURIComponent(obj.key)}`,
         source: 'r2'
       }))
-      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+      // Sort by filename (which starts with YYYY-MM-DD), descending
+      .sort((a, b) => b.name.localeCompare(a.name));
 
     return new Response(JSON.stringify(episodes), {
       headers: {
