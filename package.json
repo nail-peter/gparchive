@@ -1,0 +1,31 @@
+{
+  "name": "radio-archiver",
+  "version": "1.0.0",
+  "description": "BBC Radio show downloader with UK VPN/proxy support",
+  "main": "index.js",
+  "scripts": {
+    "test-vpn": "node test-uk-access.js",
+    "download": "node download-bbc-authenticated.js",
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.940.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "fs-extra": "^11.1.1",
+    "https-proxy-agent": "^7.0.2",
+    "node-ssdp": "^4.0.1",
+    "upnp-mediarenderer-client": "^1.4.0"
+  },
+  "keywords": [
+    "bbc",
+    "radio",
+    "downloader",
+    "vpn",
+    "uk"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contains credentials!)
+.env
+
+# Archive directory (downloaded media files)
+archive/
+*.mp3
+*.mp4
+*.m4a
+*.wav
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Temporary files
+*.tmp
+*.temp
+*.part
+*.ytdl
+
+# Debug files
+debug_*.json
+debug_*.html
+
+# IDE
+.vscode/
+.idea/
+
+# Python (if used)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+
+# Google API credentials (if using Google Drive)
+credentials.json
+token.json
+friends.json

@@ -1,0 +1,28 @@
+PWA Icon Requirements
+======================
+
+You need two icon files for the PWA to work on iPhone:
+
+1. icon-192.png (192x192 pixels)
+2. icon-512.png (512x512 pixels)
+
+Quick Ways to Create:
+
+Option 1 - Online Tool:
+- Visit: https://www.favicon-generator.org/
+- Upload any image or create simple design
+- Download 192x192 and 512x512 sizes
+
+Option 2 - Simple Design:
+- Black background (#000000)
+- White text "GP" in center
+- Use any image editor (Paint, Photoshop, GIMP, etc.)
+
+Option 3 - Use Emoji:
+- Create image with 🎵 or 🎧 emoji on black background
+- Export at required sizes
+
+Temporary Workaround:
+- The app will work without icons
+- iPhone will use a screenshot of the page as icon
+- Add proper icons later for better appearance
