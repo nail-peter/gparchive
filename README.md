@@ -1,145 +1,194 @@
-# BBC Radio Downloader
+# Gilles Peterson Archive
 
-A streamlined tool for downloading BBC Radio shows using yt-dlp with UK VPN/proxy support.
+Automated BBC Radio 6 archive system using Cloudflare infrastructure.
 
-**Live Archive:** [https://gparchive-production.up.railway.app/](https://gparchive-production.up.railway.app/)
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│  Cloudflare Pages (PWA)                     │
+│  ├── /public/          (static frontend)    │
+│  └── /functions/       (API endpoints)      │
+│      ├── /api/episodes.js                   │
+│      └── /audio/[[filename]].js             │
+└─────────────────────────────────────────────┘
+                     │
+                     ↓
+┌─────────────────────────────────────────────┐
+│  Cloudflare R2 (Audio Storage)              │
+│  Bucket: gparchive                          │
+│  Files: YYYY-MM-DD Gilles Peterson - ....mp3│
+└─────────────────────────────────────────────┘
+```
+
+## How It Works
+
+1. **You say**: "Download the latest episode"
+2. **Claude runs**: `python auto_download_weekly.py` (via yt-dlp + UK VPN)
+3. **Script automatically**:
+   - Downloads latest episode from BBC
+   - Renames to: `YYYY-MM-DD Gilles Peterson - Title.mp3`
+   - Uploads to Cloudflare R2
+   - Cleans up local files
+4. **Website updates automatically**: Cloudflare Pages Functions list episodes from R2
+
+**No code deployment needed!** Just upload to R2 and the site shows it.
+
+## The Workflow (What You Tell Claude)
+
+```
+You: "Download the latest Gilles Peterson episode"
+Claude:
+  1. Runs auto_download_weekly.py
+  2. Episode appears on website automatically
+  3. Done!
+```
 
 ## Prerequisites
 
-1. **FFmpeg** (for automatic MP3 conversion)
+- **CyberGhost VPN** connected to UK
+- **Python 3.11+** with packages:
+  ```bash
+  pip install yt-dlp boto3
+  ```
+- **Cloudflare Account** with R2 bucket configured
+
+## Files in This Repo
+
+### Core Files (Production)
+- `public/` - PWA frontend (Cloudflare Pages)
+  - `index.html` - Main page
+  - `app.js` - Player logic
+  - `style.css` - Styling
+  - `sw.js` - Service worker for PWA
+  - `manifest.json` - PWA manifest
+  - `icon-*.png` - PWA icons
+
+- `functions/` - Cloudflare Pages Functions
+  - `api/episodes.js` - Lists episodes from R2
+  - `audio/[[filename]].js` - Streams audio from R2
+
+### Download Scripts
+- `auto_download_weekly.py` - Main download script
+- `run_gp_download.bat` - Windows helper (optional)
+
+### Utilities
+- `upload_to_r2.py` - Bulk upload old episodes
+- `list_r2_files.py` - List what's in R2
+- `create_icons.py` - Generate PWA icons
+- Other helper scripts for migration
+
+### Documentation
+- `AUTOMATION_SETUP.md` - How to schedule downloads
+- `README.md` - This file
+
+## Deployment
+
+### Initial Setup (One-time)
+
+1. **Deploy to Cloudflare Pages**:
    ```bash
-   winget install ffmpeg
-   # Or download from: https://ffmpeg.org/download.html
+   # Push this repo to GitHub
+   # Connect Cloudflare Pages to the repo
+   # Root directory: /
+   # Build command: (none - static site)
+   # Build output: /public
    ```
 
-2. **Python with yt-dlp**
-   ```bash
-   pip install yt-dlp
-   ```
+2. **Configure R2 Bucket Binding**:
+   - In Cloudflare Pages settings
+   - Environment Variables → R2 Bindings
+   - Variable name: `GPARCHIVE_BUCKET`
+   - R2 bucket: `gparchive`
 
-3. **UK VPN** or UK proxy service
-   - VPN recommended (NordVPN, ExpressVPN, ProtonVPN, etc.)
-   - Must show as United Kingdom (GB)
+3. **Set R2 Public Access**:
+   - Enable R2 public access for bucket
+   - Or configure custom domain
 
-4. **BBC Account** (free)
-   - Register at: https://www.bbc.co.uk/account/register
+### Weekly Updates (Hands-off)
 
-## Quick Setup
+Just tell Claude: **"Download the latest episode"**
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+Claude will:
+1. Run `python auto_download_weekly.py`
+2. Episode uploads to R2
+3. Website shows it automatically (no deployment needed!)
 
-2. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   ```
+## Manual Download
 
-3. **Edit `.env` with your credentials:**
-   ```env
-   # VPN Mode (recommended)
-   USE_VPN=true
-
-   # BBC Account (required)
-   BBC_EMAIL=your-email@example.com
-   BBC_PASSWORD=your-password
-
-   # Archive directory
-   ARCHIVE_DIR=./archive
-   ```
-
-4. **Connect to UK VPN server**
-
-5. **Test connection:**
-   ```bash
-   npm run test-vpn
-   # Should show: "Country: United Kingdom (GB)"
-   ```
-
-## Usage
-
-### Download a BBC Show
 ```bash
-# Using npm script
-npm run download "https://www.bbc.co.uk/programmes/EPISODE_ID"
-
-# Or directly
-node download-bbc-authenticated.js "https://www.bbc.co.uk/programmes/m002l17p"
+# Connect CyberGhost VPN to UK
+python auto_download_weekly.py
 ```
 
-### Test VPN Connection
-```bash
-npm run test-vpn
+The script:
+- Finds latest episode
+- Downloads via yt-dlp
+- Renames with date
+- Uploads to R2
+- Cleans up local files
+
+## Configuration
+
+R2 credentials are in `auto_download_weekly.py`:
+
+```python
+ACCESS_KEY = "..."
+SECRET_KEY = "..."
+ACCOUNT_ID = "..."
+BUCKET_NAME = "gparchive"
 ```
 
-## BBC Sounds Download (IMPORTANT - Read This First!)
+## Live Website
 
-### ✅ What Works - Critical Information
+The website automatically:
+- Lists all episodes from R2 (sorted newest first)
+- Streams audio directly from R2
+- Works as PWA (installable on mobile)
+- Saves playback position
+- No authentication needed
 
-**Always use the `/programmes/` URL format, NOT `/sounds/play/`:**
-- ❌ **BROKEN**: `https://www.bbc.co.uk/sounds/play/m002l17p`
-- ✅ **WORKS**: `https://www.bbc.co.uk/programmes/m002l17p`
+## Cost
 
-**Why?** The BBC Sounds website uses a new format that download tools cannot parse. The older `/programmes/` endpoint still works with yt-dlp.
+| Service | Usage | Cost |
+|---------|-------|------|
+| Cloudflare Pages | Frontend hosting | $0 |
+| Cloudflare R2 | ~5GB storage | $0 (10GB free) |
+| **Total** | | **$0/month** |
 
-### Required Setup for BBC Downloads
+## Helper Scripts
 
-1. **UK VPN Required** - BBC content is geo-restricted
-   - Connect to UK VPN server before downloading
-   - Test location: `curl -s "http://ip-api.com/json/" | grep countryCode`
-   - Must show `"countryCode":"GB"`
+### List episodes in R2
+```bash
+python list_r2_files.py
+```
 
-2. **BBC Account Required** - Authentication mandatory
-   - Create free account: https://www.bbc.co.uk/account/register
-   - Add credentials to `.env`:
-     ```env
-     BBC_EMAIL=your-email@example.com
-     BBC_PASSWORD=your-password
-     ```
+### Upload old episodes
+```bash
+python upload_to_r2.py
+```
 
-3. **Use yt-dlp (Not Custom Scripts)** - Already handles authentication and download
-   ```bash
-   # Easiest method - use the authenticated script
-   node download-bbc-authenticated.js "https://www.bbc.co.uk/programmes/EPISODE_ID"
-
-   # Or use yt-dlp directly
-   python -m yt_dlp --username "email" --password "pass" \
-     -x --audio-format mp3 --audio-quality 320K \
-     -o "./archive/%(title)s.%(ext)s" \
-     "https://www.bbc.co.uk/programmes/EPISODE_ID"
-   ```
-
-### Quick Download Guide
-
-1. Connect UK VPN
-2. Find episode on BBC Sounds (e.g., `https://www.bbc.co.uk/sounds/play/m002l17p`)
-3. Extract ID (`m002l17p`) and convert to: `https://www.bbc.co.uk/programmes/m002l17p`
-4. Run: `node download-bbc-authenticated.js "https://www.bbc.co.uk/programmes/m002l17p"`
-5. Wait ~45-50 minutes for a 3-hour show (BBC throttles speed)
-6. MP3 saved to `./archive/` automatically
-
-### Troubleshooting
-
-- **"Unable to extract playlist data"** → You're using `/sounds/play/` URL, switch to `/programmes/`
-- **"404 Not Found"** → VPN not connected to UK or not working
-- **"Authentication failed"** → Check BBC credentials in `.env`
-- **Very slow download** → Normal, BBC throttles to ~150 KB/s
-
-### Important Notes
-
-- ⚠️ **Don't try to scrape BBC Sounds JSON** - `file_url` is always `null` (DRM protected)
-- ⚠️ **Don't build custom downloaders** - yt-dlp already works with `/programmes/` URLs
-- ⚠️ **Automatic MP3 conversion** - All downloads convert to 320kbps MP3 automatically
-- ✅ **Downloads are legal** - For personal use only with BBC account authentication
-
-**Full details:** See [BBC_DOWNLOAD_GUIDE.md](BBC_DOWNLOAD_GUIDE.md)
+### Create PWA icons
+```bash
+python create_icons.py
+```
 
 ## Notes
 
-- Archived files are stored in `./archive` directory
-- Schedule is saved in `./archive/schedule.json`
-- Supports .mp3, .m4a, and .wav formats
-- Respects file size limits (configurable)
-- User-Agent spoofing for better compatibility
-- FFmpeg automatically converts all downloads to MP3 (320kbps)
+- Episodes must be in format: `YYYY-MM-DD Gilles Peterson - Title.mp3`
+- R2 bucket must be named `gparchive` (or update code)
+- VPN to UK is required for BBC downloads
+- Cloudflare Pages automatically deploys on git push
+- But episodes don't need deployment - just upload to R2!
+
+## The Beautiful Part
+
+**No backend server needed!** Cloudflare Pages Functions dynamically list episodes from R2. Just upload MP3s and they appear on the site.
+
+This is the simplest possible architecture:
+1. Static PWA frontend
+2. Serverless API (Pages Functions)
+3. R2 storage
+4. Python script for downloads
+
+Everything free. Everything automatic. Works like a glove.
