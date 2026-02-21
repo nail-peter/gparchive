@@ -1,6 +1,5 @@
 let episodes = [];
 let currentEpisode = null;
-let isCasting = false;
 let lastSaveTime = 0; // Track when we last saved position
 
 const audioPlayer = document.getElementById('audioPlayer');
@@ -9,23 +8,6 @@ const currentTitle = document.getElementById('currentTitle');
 const currentDate = document.getElementById('currentDate');
 const downloadBtn = document.getElementById('downloadBtn');
 const episodeList = document.getElementById('episodeList');
-
-// Casting UI elements
-const menuBtn = document.getElementById('menuBtn');
-const optionsMenu = document.getElementById('optionsMenu');
-const downloadMenuBtn = document.getElementById('downloadMenuBtn');
-const castMenuBtn = document.getElementById('castMenuBtn');
-const castModal = document.getElementById('castModal');
-const closeCastModalBtn = document.getElementById('closeCastModalBtn');
-const scanDevicesBtn = document.getElementById('scanDevicesBtn');
-const deviceListContent = document.getElementById('deviceListContent');
-const castControls = document.getElementById('castControls');
-const castingStatus = document.getElementById('castingStatus');
-const activeCastDevice = document.getElementById('activeCastDevice');
-const castingDevice = document.getElementById('castingDevice');
-const pauseCastBtn = document.getElementById('pauseCastBtn');
-const resumeCastBtn = document.getElementById('resumeCastBtn');
-const stopCastBtn = document.getElementById('stopCastBtn');
 
 // Load episodes on page load
 window.addEventListener('DOMContentLoaded', loadEpisodes);
@@ -271,185 +253,9 @@ function showResumePrompt(episode, startTime) {
     }, 30000);
 }
 
-// Casting functionality
-// Three-dots menu (first level)
-menuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    console.log('Menu button clicked');
-    optionsMenu.style.display = optionsMenu.style.display === 'none' ? 'block' : 'none';
-});
-
-// Download option
-downloadMenuBtn.addEventListener('click', () => {
-    optionsMenu.style.display = 'none';
-    if (currentEpisode) {
-        const link = document.createElement('a');
-        link.href = currentEpisode.url;
-        link.download = currentEpisode.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-});
-
-// Cast option - opens modal
-castMenuBtn.addEventListener('click', () => {
-    optionsMenu.style.display = 'none';
-    castModal.style.display = 'flex';
-});
-
-// Close modal button
-closeCastModalBtn.addEventListener('click', () => {
-    castModal.style.display = 'none';
-});
-
-// Click outside to close modal
-castModal.addEventListener('click', (e) => {
-    if (e.target === castModal) {
-        castModal.style.display = 'none';
-    }
-});
-
-// Click outside to close options menu
-document.addEventListener('click', (e) => {
-    if (!menuBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
-        optionsMenu.style.display = 'none';
-    }
-});
-
-scanDevicesBtn.addEventListener('click', async () => {
-    scanDevicesBtn.disabled = true;
-    scanDevicesBtn.textContent = '🔍 Scanning...';
-    deviceListContent.innerHTML = '<div class="loading">Scanning for devices...</div>';
-
-    try {
-        const response = await fetch('/api/cast/devices');
-        if (!response.ok) throw new Error('Failed to scan devices');
-
-        const devices = await response.json();
-
-        if (devices.length === 0) {
-            deviceListContent.innerHTML = '<div class="loading">No devices found. Make sure your devices are on the same network.</div>';
-        } else {
-            deviceListContent.innerHTML = devices.map(device => `
-                <div class="device-item" data-location="${device.location}" data-name="${device.name}">
-                    <div class="device-name">${device.name}</div>
-                    <div class="device-type">${device.type} • ${device.address}</div>
-                </div>
-            `).join('');
-
-            // Add click handlers to device items
-            document.querySelectorAll('.device-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const location = item.dataset.location;
-                    const name = item.dataset.name;
-                    startCasting(location, name);
-                });
-            });
-        }
-    } catch (error) {
-        console.error('Error scanning devices:', error);
-        deviceListContent.innerHTML = '<div class="error">Failed to scan for devices. Please try again.</div>';
-    } finally {
-        scanDevicesBtn.disabled = false;
-        scanDevicesBtn.textContent = '🔍 Scan for Devices';
-    }
-});
-
-async function startCasting(deviceLocation, deviceName) {
-    if (!currentEpisode) {
-        alert('Please select an episode first');
-        return;
-    }
-
-    console.log('Starting cast to:', deviceName, deviceLocation);
-
-    try {
-        const response = await fetch('/api/cast/play', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                deviceLocation: deviceLocation,
-                episodeName: currentEpisode.name
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Cast failed:', errorText);
-            throw new Error(`Failed to start casting: ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log('Cast response:', result);
-
-        isCasting = true;
-        audioPlayer.pause();
-
-        // Update UI
-        castingStatus.style.display = 'flex';
-        castingDevice.textContent = `Casting to ${deviceName}`;
-        activeCastDevice.textContent = deviceName;
-        castControls.style.display = 'block';
-        deviceListContent.innerHTML = '';
-        scanDevicesBtn.style.display = 'none';
-
-        console.log('Casting started successfully');
-    } catch (error) {
-        console.error('Error starting cast:', error);
-        alert(`Failed to start casting: ${error.message}`);
-    }
-}
-
-pauseCastBtn.addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/cast/pause', { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to pause');
-
-        pauseCastBtn.style.display = 'none';
-        resumeCastBtn.style.display = 'block';
-    } catch (error) {
-        console.error('Error pausing cast:', error);
-        alert('Failed to pause. Please try again.');
-    }
-});
-
-resumeCastBtn.addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/cast/resume', { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to resume');
-
-        resumeCastBtn.style.display = 'none';
-        pauseCastBtn.style.display = 'block';
-    } catch (error) {
-        console.error('Error resuming cast:', error);
-        alert('Failed to resume. Please try again.');
-    }
-});
-
-stopCastBtn.addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/cast/stop', { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to stop');
-
-        isCasting = false;
-        castingStatus.style.display = 'none';
-        castControls.style.display = 'none';
-        scanDevicesBtn.style.display = 'block';
-        pauseCastBtn.style.display = 'block';
-        resumeCastBtn.style.display = 'none';
-        castModal.style.display = 'none';
-
-        console.log('Casting stopped');
-    } catch (error) {
-        console.error('Error stopping cast:', error);
-        alert('Failed to stop casting. Please try again.');
-    }
-});
-
 // Auto-save playback position while playing
 audioPlayer.addEventListener('timeupdate', () => {
-    if (!currentEpisode || isCasting) return;
+    if (!currentEpisode) return;
 
     const currentTime = audioPlayer.currentTime;
     const duration = audioPlayer.duration;

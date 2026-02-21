@@ -21,12 +21,9 @@
         <main>
             <!-- Current player -->
             <div id="player" class="player" style="display: none;">
-                <div class="player-header">
-                    <div class="player-info">
-                        <div class="episode-title" id="currentTitle">Select an episode</div>
-                        <div class="episode-date" id="currentDate"></div>
-                    </div>
-                    <button id="menuBtn" class="menu-btn" aria-label="More options">⋮</button>
+                <div class="player-info">
+                    <div class="episode-title" id="currentTitle">Select an episode</div>
+                    <div class="episode-date" id="currentDate"></div>
                 </div>
 
                 <audio id="audioPlayer" controls preload="metadata">
@@ -36,53 +33,6 @@
                 <button id="downloadBtn" class="download-btn" style="display: none;">
                     Download
                 </button>
-
-                <!-- Casting status indicator -->
-                <div id="castingStatus" class="casting-status" style="display: none;">
-                    <span class="cast-icon">📡</span>
-                    <span id="castingDevice">Casting to device...</span>
-                </div>
-            </div>
-
-            <!-- Three-dots menu -->
-            <div id="optionsMenu" class="options-menu" style="display: none;">
-                <div class="options-menu-content">
-                    <button id="downloadMenuBtn" class="menu-option">
-                        ⬇️ Download Episode
-                    </button>
-                    <button id="castMenuBtn" class="menu-option">
-                        📡 Cast to Device
-                    </button>
-                </div>
-            </div>
-
-            <!-- Cast device selection modal -->
-            <div id="castModal" class="cast-modal" style="display: none;">
-                <div class="cast-modal-content">
-                    <div class="cast-modal-header">
-                        <h3>Cast to Device</h3>
-                        <button id="closeCastModalBtn" class="close-modal-btn">✕</button>
-                    </div>
-
-                    <div id="deviceList" class="device-list">
-                        <button id="scanDevicesBtn" class="scan-btn">
-                            🔍 Scan for Devices
-                        </button>
-                        <div id="deviceListContent"></div>
-                    </div>
-
-                    <div id="castControls" class="cast-controls" style="display: none;">
-                        <p class="cast-info">
-                            <strong>Casting to:</strong><br>
-                            <span id="activeCastDevice"></span>
-                        </p>
-                        <div class="cast-buttons">
-                            <button id="pauseCastBtn" class="cast-control-btn">⏸ Pause</button>
-                            <button id="resumeCastBtn" class="cast-control-btn" style="display: none;">▶ Resume</button>
-                            <button id="stopCastBtn" class="cast-control-btn stop">⏹ Stop</button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Episode list -->
