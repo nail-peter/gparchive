@@ -29,7 +29,7 @@ BUCKET_NAME = "gparchive"
 ENDPOINT_URL = f"https://{ACCOUNT_ID}.r2.cloudflarestorage.com"
 
 # BBC Programme ID for Gilles Peterson
-GP_PROGRAMME_ID = "b006wkqb"
+GP_PROGRAMME_ID = "b01fm4ss"
 
 # Download directory
 DOWNLOAD_DIR = Path(__file__).parent / "downloads"
@@ -51,7 +51,7 @@ def find_latest_episode():
 
     try:
         result = subprocess.run(
-            ['yt-dlp', '--playlist-items', '1', '--dump-json', '--skip-download', url],
+            ['python', '-m', 'yt_dlp', '--playlist-items', '1', '--dump-json', '--skip-download', url],
             capture_output=True,
             text=True,
             timeout=60
@@ -144,7 +144,7 @@ def download_episode(episode):
     try:
         result = subprocess.run(
             [
-                'yt-dlp',
+                'python', '-m', 'yt_dlp',
                 '--format', 'bestaudio',
                 '--extract-audio',
                 '--audio-format', 'mp3',
