@@ -1,4 +1,6 @@
 let episodes = [];
+let gpEpisodes = [];
+let mfdoomEpisodes = [];
 let currentEpisode = null;
 let lastSaveTime = 0; // Track when we last saved position
 
@@ -8,6 +10,8 @@ const currentTitle = document.getElementById('currentTitle');
 const currentDate = document.getElementById('currentDate');
 const downloadBtn = document.getElementById('downloadBtn');
 const episodeList = document.getElementById('episodeList');
+const mfdoomList = document.getElementById('mfdoomList');
+const mfdoomSection = document.getElementById('mfdoomSection');
 
 // Load episodes on page load
 window.addEventListener('DOMContentLoaded', loadEpisodes);
@@ -24,7 +28,17 @@ async function loadEpisodes() {
             return;
         }
 
+        // Split episodes into GP and MF DOOM
+        gpEpisodes = episodes.filter(ep => !ep.name.startsWith('MF DOOM'));
+        mfdoomEpisodes = episodes.filter(ep => ep.name.startsWith('MF DOOM'));
+
         renderEpisodes();
+        
+        // Show MF DOOM section if there are episodes
+        if (mfdoomEpisodes.length > 0) {
+            renderMFDoomEpisodes();
+            mfdoomSection.style.display = 'block';
+        }
 
         // Check for saved playback position
         const savedPosition = loadPlaybackPosition();
@@ -51,12 +65,25 @@ async function loadEpisodes() {
 }
 
 function renderEpisodes() {
-    episodeList.innerHTML = episodes
+    episodeList.innerHTML = gpEpisodes
         .map((ep, index) => `
-            <div class="episode-item" data-index="${index}" onclick="playEpisode(episodes[${index}])">
+            <div class="episode-item gp-episode" data-index="${index}" onclick="playEpisode(gpEpisodes[${index}])">
                 <div class="episode-item-title">${formatTitle(ep.name)}</div>
                 <div class="episode-item-meta">
                     <span>${formatDate(ep.modified)}</span>
+                    <span>${formatSize(ep.size)}</span>
+                </div>
+            </div>
+        `)
+        .join('');
+}
+
+function renderMFDoomEpisodes() {
+    mfdoomList.innerHTML = mfdoomEpisodes
+        .map((ep, index) => `
+            <div class="episode-item mfdoom-episode" data-index="${index}" onclick="playEpisode(mfdoomEpisodes[${index}])">
+                <div class="episode-item-title">${formatTitle(ep.name)}</div>
+                <div class="episode-item-meta">
                     <span>${formatSize(ep.size)}</span>
                 </div>
             </div>
@@ -75,8 +102,13 @@ function playEpisode(episode, startTime = 0) {
     playerDiv.style.display = 'block';
 
     // Update active state in list
-    document.querySelectorAll('.episode-item').forEach((item, index) => {
-        if (index === episodes.indexOf(episode)) {
+    document.querySelectorAll('.episode-item').forEach((item) => {
+        const isGp = item.classList.contains('gp-episode');
+        const isMfdoom = item.classList.contains('mfdoom-episode');
+        const itemIndex = parseInt(item.getAttribute('data-index'));
+        
+        if ((isGp && gpEpisodes[itemIndex] === episode) || 
+            (isMfdoom && mfdoomEpisodes[itemIndex] === episode)) {
             item.classList.add('active');
         } else {
             item.classList.remove('active');
