@@ -248,14 +248,19 @@ viewToggle.addEventListener('click', () => {
         currentView = 'mfdoom';
         gpSection.style.display = 'none';
         mfdoomSection.style.display = 'block';
-        toggleIcon.textContent = '🎵'; // GP icon
+        toggleIcon.style.display = 'none'; // Hide MF DOOM mask, show text
+        toggleIcon.insertAdjacentHTML('afterend', '<span id="gpIcon" style="font-size: 24px;">🎵</span>');
+        viewToggle.setAttribute('title', 'Switch to GP');
         pageTitle.textContent = 'MF DOOM: Long Island to Leeds';
     } else {
         // Switch to GP view
         currentView = 'gp';
         gpSection.style.display = 'block';
         mfdoomSection.style.display = 'none';
-        toggleIcon.textContent = '🎭'; // MF DOOM icon
+        const gpIcon = document.getElementById('gpIcon');
+        if (gpIcon) gpIcon.remove();
+        toggleIcon.style.display = 'block';
+        viewToggle.setAttribute('title', 'Switch to MF DOOM');
         pageTitle.textContent = 'GP Archive';
     }
 });

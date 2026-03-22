@@ -29,7 +29,7 @@ body {
 header {
     position: relative;
     text-align: center;
-    padding: 40px 0 30px;
+    padding: 40px 60px 30px;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 30px;
 }
@@ -42,15 +42,14 @@ header h1 {
 
 .view-toggle {
     position: absolute;
-    left: 0;
+    left: 20px;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 8px;
-    font-size: 24px;
-    transition: transform 0.2s ease;
+    padding: 0;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -58,10 +57,17 @@ header h1 {
 
 .view-toggle:hover {
     transform: translateY(-50%) scale(1.1);
+    opacity: 0.8;
 }
 
 .view-toggle:active {
     transform: translateY(-50%) scale(0.95);
+}
+
+.toggle-icon {
+    width: 32px;
+    height: 32px;
+    display: block;
 }
 
 .player {
