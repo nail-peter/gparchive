@@ -27,6 +27,7 @@ body {
 }
 
 header {
+    position: relative;
     text-align: center;
     padding: 40px 0 30px;
     border-bottom: 1px solid var(--border-color);
@@ -37,6 +38,30 @@ header h1 {
     font-size: 2em;
     font-weight: 300;
     letter-spacing: 2px;
+}
+
+.view-toggle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 24px;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-toggle:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.view-toggle:active {
+    transform: translateY(-50%) scale(0.95);
 }
 
 .player {

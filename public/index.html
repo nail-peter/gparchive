@@ -15,7 +15,10 @@
 <body>
     <div class="container">
         <header>
-            <h1>GP Archive</h1>
+            <button id="viewToggle" class="view-toggle" title="Switch view">
+                <span id="toggleIcon">🎭</span>
+            </button>
+            <h1 id="pageTitle">GP Archive</h1>
         </header>
 
         <main>
@@ -36,7 +39,7 @@
             </div>
 
             <!-- Episode list -->
-            <div class="episodes">
+            <div class="episodes" id="gpSection">
                 <h2>Episodes</h2>
                 <div id="episodeList" class="episode-list">
                     <div class="loading">Loading episodes...</div>
@@ -44,7 +47,7 @@
             </div>
 
             <!-- MF DOOM series -->
-            <div class="episodes mfdoom-section" id="mfdoomSection" style="display: none;">
+            <div class="episodes" id="mfdoomSection" style="display: none;">
                 <h2>MF DOOM: Long Island to Leeds</h2>
                 <div id="mfdoomList" class="episode-list">
                 </div>

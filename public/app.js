@@ -3,6 +3,7 @@ let gpEpisodes = [];
 let mfdoomEpisodes = [];
 let currentEpisode = null;
 let lastSaveTime = 0; // Track when we last saved position
+let currentView = 'gp'; // 'gp' or 'mfdoom'
 
 const audioPlayer = document.getElementById('audioPlayer');
 const playerDiv = document.getElementById('player');
@@ -11,7 +12,11 @@ const currentDate = document.getElementById('currentDate');
 const downloadBtn = document.getElementById('downloadBtn');
 const episodeList = document.getElementById('episodeList');
 const mfdoomList = document.getElementById('mfdoomList');
+const gpSection = document.getElementById('gpSection');
 const mfdoomSection = document.getElementById('mfdoomSection');
+const viewToggle = document.getElementById('viewToggle');
+const toggleIcon = document.getElementById('toggleIcon');
+const pageTitle = document.getElementById('pageTitle');
 
 // Load episodes on page load
 window.addEventListener('DOMContentLoaded', loadEpisodes);
@@ -30,14 +35,13 @@ async function loadEpisodes() {
 
         // Split episodes into GP and MF DOOM
         gpEpisodes = episodes.filter(ep => !ep.name.startsWith('MF DOOM'));
-        mfdoomEpisodes = episodes.filter(ep => ep.name.startsWith('MF DOOM'));
+        mfdoomEpisodes = episodes.filter(ep => ep.name.startsWith('MF DOOM')).reverse(); // Descending order
 
         renderEpisodes();
         
-        // Show MF DOOM section if there are episodes
+        // Render MF DOOM episodes but keep section hidden
         if (mfdoomEpisodes.length > 0) {
             renderMFDoomEpisodes();
-            mfdoomSection.style.display = 'block';
         }
 
         // Check for saved playback position
@@ -236,3 +240,23 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('Service Worker registration failed:', err));
     });
 }
+
+// View toggle functionality
+viewToggle.addEventListener('click', () => {
+    if (currentView === 'gp') {
+        // Switch to MF DOOM view
+        currentView = 'mfdoom';
+        gpSection.style.display = 'none';
+        mfdoomSection.style.display = 'block';
+        toggleIcon.textContent = '🎵'; // GP icon
+        pageTitle.textContent = 'MF DOOM: Long Island to Leeds';
+    } else {
+        // Switch to GP view
+        currentView = 'gp';
+        gpSection.style.display = 'block';
+        mfdoomSection.style.display = 'none';
+        toggleIcon.textContent = '🎭'; // MF DOOM icon
+        pageTitle.textContent = 'GP Archive';
+    }
+});
+
