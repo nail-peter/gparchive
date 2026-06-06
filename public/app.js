@@ -1,6 +1,10 @@
 let episodes = [];
+let gpEpisodes = [];
+let mfdoomEpisodes = [];
 let currentEpisode = null;
 let isCasting = false;
+let currentView = 'gp';
+let lastSaveTime = 0;
 
 const audioPlayer = document.getElementById('audioPlayer');
 const playerDiv = document.getElementById('player');
@@ -8,6 +12,12 @@ const currentTitle = document.getElementById('currentTitle');
 const currentDate = document.getElementById('currentDate');
 const downloadBtn = document.getElementById('downloadBtn');
 const episodeList = document.getElementById('episodeList');
+const mfdoomList = document.getElementById('mfdoomList');
+const gpSection = document.getElementById('gpSection');
+const mfdoomSection = document.getElementById('mfdoomSection');
+const viewToggle = document.getElementById('viewToggle');
+const toggleIcon = document.getElementById('toggleIcon');
+const pageTitle = document.getElementById('pageTitle');
 
 // Casting UI elements
 const menuBtn = document.getElementById('menuBtn');
@@ -41,10 +51,20 @@ async function loadEpisodes() {
             return;
         }
 
-        renderEpisodes();
+        gpEpisodes = episodes.filter(ep => !ep.name.startsWith('MF DOOM'));
+        mfdoomEpisodes = episodes.filter(ep => ep.name.startsWith('MF DOOM')).reverse();
 
-        // Auto-play most recent episode
-        playEpisode(episodes[0]);
+        renderEpisodes();
+        if (mfdoomEpisodes.length > 0) renderMFDoomEpisodes();
+
+        // Resume saved position or auto-play most recent
+        const savedPosition = loadPlaybackPosition();
+        if (savedPosition) {
+            const savedEpisode = episodes.find(ep => ep.name === savedPosition.episodeName);
+            playEpisode(savedEpisode || gpEpisodes[0], savedEpisode ? savedPosition.currentTime : 0);
+        } else {
+            playEpisode(gpEpisodes[0]);
+        }
     } catch (error) {
         console.error('Error loading episodes:', error);
         episodeList.innerHTML = '<div class="error">Failed to load episodes. Please refresh the page.</div>';
@@ -52,12 +72,25 @@ async function loadEpisodes() {
 }
 
 function renderEpisodes() {
-    episodeList.innerHTML = episodes
+    episodeList.innerHTML = gpEpisodes
         .map((ep, index) => `
-            <div class="episode-item" data-index="${index}" onclick="playEpisode(episodes[${index}])">
+            <div class="episode-item gp-episode" data-index="${index}" onclick="playEpisode(gpEpisodes[${index}])">
                 <div class="episode-item-title">${formatTitle(ep.name)}</div>
                 <div class="episode-item-meta">
                     <span>${formatDate(ep.modified)}</span>
+                    <span>${formatSize(ep.size)}</span>
+                </div>
+            </div>
+        `)
+        .join('');
+}
+
+function renderMFDoomEpisodes() {
+    mfdoomList.innerHTML = mfdoomEpisodes
+        .map((ep, index) => `
+            <div class="episode-item mfdoom-episode" data-index="${index}" onclick="playEpisode(mfdoomEpisodes[${index}])">
+                <div class="episode-item-title">${formatTitle(ep.name)}</div>
+                <div class="episode-item-meta">
                     <span>${formatSize(ep.size)}</span>
                 </div>
             </div>
@@ -76,12 +109,13 @@ function playEpisode(episode) {
     playerDiv.style.display = 'block';
 
     // Update active state in list
-    document.querySelectorAll('.episode-item').forEach((item, index) => {
-        if (index === episodes.indexOf(episode)) {
-            item.classList.add('active');
-        } else {
-            item.classList.remove('active');
-        }
+    document.querySelectorAll('.episode-item').forEach((item) => {
+        const isGp = item.classList.contains('gp-episode');
+        const isMfdoom = item.classList.contains('mfdoom-episode');
+        const itemIndex = parseInt(item.getAttribute('data-index'));
+        const matches = (isGp && gpEpisodes[itemIndex] === episode) ||
+                        (isMfdoom && mfdoomEpisodes[itemIndex] === episode);
+        item.classList.toggle('active', matches);
     });
 
     // Play audio
@@ -308,6 +342,66 @@ stopCastBtn.addEventListener('click', async () => {
     } catch (error) {
         console.error('Error stopping cast:', error);
         alert('Failed to stop casting. Please try again.');
+    }
+});
+
+// Playback position save/load
+function savePlaybackPosition(episodeName, currentTime, duration) {
+    if (currentTime < 30 || currentTime > duration * 0.95) return;
+    try {
+        localStorage.setItem('gp_playback_position', JSON.stringify({
+            episodeName, currentTime, duration, savedAt: Date.now()
+        }));
+    } catch (e) {}
+}
+
+function loadPlaybackPosition() {
+    try {
+        const saved = localStorage.getItem('gp_playback_position');
+        if (!saved) return null;
+        const data = JSON.parse(saved);
+        if (Date.now() - data.savedAt > 24 * 60 * 60 * 1000) {
+            localStorage.removeItem('gp_playback_position');
+            return null;
+        }
+        return data;
+    } catch (e) { return null; }
+}
+
+audioPlayer.addEventListener('timeupdate', () => {
+    if (!currentEpisode) return;
+    const t = audioPlayer.currentTime;
+    if (t - lastSaveTime >= 10) {
+        savePlaybackPosition(currentEpisode.name, t, audioPlayer.duration);
+        lastSaveTime = t;
+    }
+});
+
+audioPlayer.addEventListener('ended', () => {
+    localStorage.removeItem('gp_playback_position');
+});
+
+// Series toggle
+viewToggle.addEventListener('click', () => {
+    if (currentView === 'gp') {
+        currentView = 'mfdoom';
+        gpSection.style.display = 'none';
+        mfdoomSection.style.display = 'block';
+        toggleIcon.style.display = 'none';
+        if (!document.getElementById('gpIcon')) {
+            toggleIcon.insertAdjacentHTML('afterend', '<span id="gpIcon" style="font-size:24px;">🎵</span>');
+        }
+        viewToggle.title = 'Switch to GP';
+        pageTitle.textContent = 'MF DOOM: Long Island to Leeds';
+    } else {
+        currentView = 'gp';
+        gpSection.style.display = 'block';
+        mfdoomSection.style.display = 'none';
+        const gpIcon = document.getElementById('gpIcon');
+        if (gpIcon) gpIcon.remove();
+        toggleIcon.style.display = 'block';
+        viewToggle.title = 'Switch to MF DOOM';
+        pageTitle.textContent = 'GP Archive';
     }
 });
 

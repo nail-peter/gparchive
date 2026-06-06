@@ -15,7 +15,10 @@
 <body>
     <div class="container">
         <header>
-            <h1>GP Archive</h1>
+            <button id="viewToggle" class="view-toggle" title="Switch to MF DOOM">
+                <img id="toggleIcon" src="/mfdoom-mask.png" alt="MF DOOM" class="toggle-icon">
+            </button>
+            <h1 id="pageTitle">GP Archive</h1>
         </header>
 
         <main>
@@ -86,11 +89,17 @@
             </div>
 
             <!-- Episode list -->
-            <div class="episodes">
+            <div class="episodes" id="gpSection">
                 <h2>Episodes</h2>
                 <div id="episodeList" class="episode-list">
                     <div class="loading">Loading episodes...</div>
                 </div>
+            </div>
+
+            <!-- MF DOOM series (hidden by default) -->
+            <div class="episodes" id="mfdoomSection" style="display: none;">
+                <h2>MF DOOM: Long Island to Leeds</h2>
+                <div id="mfdoomList" class="episode-list"></div>
             </div>
         </main>
     </div>
