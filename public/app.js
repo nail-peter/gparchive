@@ -2,15 +2,13 @@ let episodes = [];
 let gpEpisodes = [];
 let mfdoomEpisodes = [];
 let currentEpisode = null;
-let isCasting = false;
-let currentView = 'gp';
 let lastSaveTime = 0;
+let currentView = 'gp';
 
 const audioPlayer = document.getElementById('audioPlayer');
 const playerDiv = document.getElementById('player');
 const currentTitle = document.getElementById('currentTitle');
 const currentDate = document.getElementById('currentDate');
-const downloadBtn = document.getElementById('downloadBtn');
 const episodeList = document.getElementById('episodeList');
 const mfdoomList = document.getElementById('mfdoomList');
 const gpSection = document.getElementById('gpSection');
@@ -18,23 +16,6 @@ const mfdoomSection = document.getElementById('mfdoomSection');
 const viewToggle = document.getElementById('viewToggle');
 const toggleIcon = document.getElementById('toggleIcon');
 const pageTitle = document.getElementById('pageTitle');
-
-// Casting UI elements
-const menuBtn = document.getElementById('menuBtn');
-const optionsMenu = document.getElementById('optionsMenu');
-const downloadMenuBtn = document.getElementById('downloadMenuBtn');
-const castMenuBtn = document.getElementById('castMenuBtn');
-const castModal = document.getElementById('castModal');
-const closeCastModalBtn = document.getElementById('closeCastModalBtn');
-const scanDevicesBtn = document.getElementById('scanDevicesBtn');
-const deviceListContent = document.getElementById('deviceListContent');
-const castControls = document.getElementById('castControls');
-const castingStatus = document.getElementById('castingStatus');
-const activeCastDevice = document.getElementById('activeCastDevice');
-const castingDevice = document.getElementById('castingDevice');
-const pauseCastBtn = document.getElementById('pauseCastBtn');
-const resumeCastBtn = document.getElementById('resumeCastBtn');
-const stopCastBtn = document.getElementById('stopCastBtn');
 
 // Load episodes on page load
 window.addEventListener('DOMContentLoaded', loadEpisodes);
@@ -51,17 +32,27 @@ async function loadEpisodes() {
             return;
         }
 
+        // Split episodes into GP and MF DOOM
         gpEpisodes = episodes.filter(ep => !ep.name.startsWith('MF DOOM'));
         mfdoomEpisodes = episodes.filter(ep => ep.name.startsWith('MF DOOM')).reverse();
 
         renderEpisodes();
-        if (mfdoomEpisodes.length > 0) renderMFDoomEpisodes();
 
-        // Resume saved position or auto-play most recent
+        // Render MF DOOM episodes but keep section hidden
+        if (mfdoomEpisodes.length > 0) {
+            renderMFDoomEpisodes();
+        }
+
+        // Check for saved playback position
         const savedPosition = loadPlaybackPosition();
+
         if (savedPosition) {
             const savedEpisode = episodes.find(ep => ep.name === savedPosition.episodeName);
-            playEpisode(savedEpisode || gpEpisodes[0], savedEpisode ? savedPosition.currentTime : 0);
+            if (savedEpisode) {
+                playEpisode(savedEpisode, savedPosition.currentTime);
+            } else {
+                playEpisode(gpEpisodes[0]);
+            }
         } else {
             playEpisode(gpEpisodes[0]);
         }
@@ -98,14 +89,12 @@ function renderMFDoomEpisodes() {
         .join('');
 }
 
-function playEpisode(episode) {
+function playEpisode(episode, startTime = 0) {
     currentEpisode = episode;
 
-    // Update player UI
     currentTitle.textContent = formatTitle(episode.name);
     currentDate.textContent = formatDate(episode.modified);
     audioPlayer.src = episode.url;
-    downloadBtn.style.display = 'block';
     playerDiv.style.display = 'block';
 
     // Update active state in list
@@ -113,34 +102,23 @@ function playEpisode(episode) {
         const isGp = item.classList.contains('gp-episode');
         const isMfdoom = item.classList.contains('mfdoom-episode');
         const itemIndex = parseInt(item.getAttribute('data-index'));
-        const matches = (isGp && gpEpisodes[itemIndex] === episode) ||
-                        (isMfdoom && mfdoomEpisodes[itemIndex] === episode);
-        item.classList.toggle('active', matches);
+
+        if ((isGp && gpEpisodes[itemIndex] === episode) ||
+            (isMfdoom && mfdoomEpisodes[itemIndex] === episode)) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
     });
 
-    // Play audio
+    if (startTime > 0) {
+        audioPlayer.currentTime = startTime;
+    }
+
     audioPlayer.play().catch(err => {
         console.error('Error playing audio:', err);
     });
-
-    // Save current episode to localStorage
-    try {
-        localStorage.setItem('lastEpisode', episode.name);
-    } catch (e) {
-        console.warn('Could not save to localStorage:', e);
-    }
 }
-
-downloadBtn.addEventListener('click', () => {
-    if (currentEpisode) {
-        const link = document.createElement('a');
-        link.href = currentEpisode.url;
-        link.download = currentEpisode.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-});
 
 // Helper functions
 function formatTitle(filename) {
@@ -169,203 +147,40 @@ function formatSize(bytes) {
     return `${mb.toFixed(0)} MB`;
 }
 
-// Casting functionality
-// Three-dots menu (first level)
-menuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    console.log('Menu button clicked');
-    optionsMenu.style.display = optionsMenu.style.display === 'none' ? 'block' : 'none';
-});
-
-// Download option
-downloadMenuBtn.addEventListener('click', () => {
-    optionsMenu.style.display = 'none';
-    if (currentEpisode) {
-        const link = document.createElement('a');
-        link.href = currentEpisode.url;
-        link.download = currentEpisode.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-});
-
-// Cast option - opens modal
-castMenuBtn.addEventListener('click', () => {
-    optionsMenu.style.display = 'none';
-    castModal.style.display = 'flex';
-});
-
-// Close modal button
-closeCastModalBtn.addEventListener('click', () => {
-    castModal.style.display = 'none';
-});
-
-// Click outside to close modal
-castModal.addEventListener('click', (e) => {
-    if (e.target === castModal) {
-        castModal.style.display = 'none';
-    }
-});
-
-// Click outside to close options menu
-document.addEventListener('click', (e) => {
-    if (!menuBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
-        optionsMenu.style.display = 'none';
-    }
-});
-
-scanDevicesBtn.addEventListener('click', async () => {
-    scanDevicesBtn.disabled = true;
-    scanDevicesBtn.textContent = '🔍 Scanning...';
-    deviceListContent.innerHTML = '<div class="loading">Scanning for devices...</div>';
-
-    try {
-        const response = await fetch('/api/cast/devices');
-        if (!response.ok) throw new Error('Failed to scan devices');
-
-        const devices = await response.json();
-
-        if (devices.length === 0) {
-            deviceListContent.innerHTML = '<div class="loading">No devices found. Make sure your devices are on the same network.</div>';
-        } else {
-            deviceListContent.innerHTML = devices.map(device => `
-                <div class="device-item" data-location="${device.location}" data-name="${device.name}">
-                    <div class="device-name">${device.name}</div>
-                    <div class="device-type">${device.type} • ${device.address}</div>
-                </div>
-            `).join('');
-
-            // Add click handlers to device items
-            document.querySelectorAll('.device-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const location = item.dataset.location;
-                    const name = item.dataset.name;
-                    startCasting(location, name);
-                });
-            });
-        }
-    } catch (error) {
-        console.error('Error scanning devices:', error);
-        deviceListContent.innerHTML = '<div class="error">Failed to scan for devices. Please try again.</div>';
-    } finally {
-        scanDevicesBtn.disabled = false;
-        scanDevicesBtn.textContent = '🔍 Scan for Devices';
-    }
-});
-
-async function startCasting(deviceLocation, deviceName) {
-    if (!currentEpisode) {
-        alert('Please select an episode first');
-        return;
-    }
-
-    console.log('Starting cast to:', deviceName, deviceLocation);
-
-    try {
-        const response = await fetch('/api/cast/play', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                deviceLocation: deviceLocation,
-                episodeName: currentEpisode.name
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Cast failed:', errorText);
-            throw new Error(`Failed to start casting: ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log('Cast response:', result);
-
-        isCasting = true;
-        audioPlayer.pause();
-
-        // Update UI
-        castingStatus.style.display = 'flex';
-        castingDevice.textContent = `Casting to ${deviceName}`;
-        activeCastDevice.textContent = deviceName;
-        castControls.style.display = 'block';
-        deviceListContent.innerHTML = '';
-        scanDevicesBtn.style.display = 'none';
-
-        console.log('Casting started successfully');
-    } catch (error) {
-        console.error('Error starting cast:', error);
-        alert(`Failed to start casting: ${error.message}`);
-    }
-}
-
-pauseCastBtn.addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/cast/pause', { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to pause');
-
-        pauseCastBtn.style.display = 'none';
-        resumeCastBtn.style.display = 'block';
-    } catch (error) {
-        console.error('Error pausing cast:', error);
-        alert('Failed to pause. Please try again.');
-    }
-});
-
-resumeCastBtn.addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/cast/resume', { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to resume');
-
-        resumeCastBtn.style.display = 'none';
-        pauseCastBtn.style.display = 'block';
-    } catch (error) {
-        console.error('Error resuming cast:', error);
-        alert('Failed to resume. Please try again.');
-    }
-});
-
-stopCastBtn.addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/cast/stop', { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to stop');
-
-        isCasting = false;
-        castingStatus.style.display = 'none';
-        castControls.style.display = 'none';
-        scanDevicesBtn.style.display = 'block';
-        pauseCastBtn.style.display = 'block';
-        resumeCastBtn.style.display = 'none';
-        castModal.style.display = 'none';
-
-        console.log('Casting stopped');
-    } catch (error) {
-        console.error('Error stopping cast:', error);
-        alert('Failed to stop casting. Please try again.');
-    }
-});
-
-// Playback position save/load
+// Playback position saving/loading
 function savePlaybackPosition(episodeName, currentTime, duration) {
     if (currentTime < 30 || currentTime > duration * 0.95) return;
+
     try {
         localStorage.setItem('gp_playback_position', JSON.stringify({
-            episodeName, currentTime, duration, savedAt: Date.now()
+            episodeName,
+            currentTime,
+            duration,
+            savedAt: Date.now()
         }));
-    } catch (e) {}
+    } catch (e) {
+        console.warn('Could not save playback position:', e);
+    }
 }
 
 function loadPlaybackPosition() {
     try {
         const saved = localStorage.getItem('gp_playback_position');
         if (!saved) return null;
+
         const data = JSON.parse(saved);
-        if (Date.now() - data.savedAt > 24 * 60 * 60 * 1000) {
+        const ageMs = Date.now() - data.savedAt;
+
+        if (ageMs > 24 * 60 * 60 * 1000) {
             localStorage.removeItem('gp_playback_position');
             return null;
         }
+
         return data;
-    } catch (e) { return null; }
+    } catch (e) {
+        console.warn('Could not load playback position:', e);
+        return null;
+    }
 }
 
 audioPlayer.addEventListener('timeupdate', () => {
@@ -389,9 +204,9 @@ viewToggle.addEventListener('click', () => {
         mfdoomSection.style.display = 'block';
         toggleIcon.style.display = 'none';
         if (!document.getElementById('gpIcon')) {
-            toggleIcon.insertAdjacentHTML('afterend', '<span id="gpIcon" style="font-size:24px;">🎵</span>');
+            toggleIcon.insertAdjacentHTML('afterend', '<span id="gpIcon" style="font-size: 24px;">🎵</span>');
         }
-        viewToggle.title = 'Switch to GP';
+        viewToggle.setAttribute('title', 'Switch to GP');
         pageTitle.textContent = 'MF DOOM: Long Island to Leeds';
     } else {
         currentView = 'gp';
@@ -400,7 +215,7 @@ viewToggle.addEventListener('click', () => {
         const gpIcon = document.getElementById('gpIcon');
         if (gpIcon) gpIcon.remove();
         toggleIcon.style.display = 'block';
-        viewToggle.title = 'Switch to MF DOOM';
+        viewToggle.setAttribute('title', 'Switch to MF DOOM');
         pageTitle.textContent = 'GP Archive';
     }
 });
